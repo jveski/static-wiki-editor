@@ -90,6 +90,7 @@ func main() {
 	assets := http.FileServer(http.FS(assetFS))
 
 	var (
+		addr           = flag.String("addr", "127.0.0.1:8080", "Address to listen on")
 		syncInterval   = flag.Duration("sync-interval", time.Minute*5, "How often to sync git repo (not including actions caused by incoming requests)")
 		syncCooldown   = flag.Duration("sync-cooldown", time.Second*10, "Min interval between git pushes")
 		allowAnonymous = flag.Bool("allow-anonymous", false, "(insecure!) Allow anyone to edit. If false, X-Forwarded-Email is used to authenticate users")
@@ -187,7 +188,7 @@ func main() {
 		}
 	})
 
-	panic(http.ListenAndServe(":8080", router))
+	panic(http.ListenAndServe(*addr, router))
 }
 
 var gitLock sync.Mutex
