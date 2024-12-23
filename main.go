@@ -10,6 +10,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"regexp"
 	"strings"
 	"sync"
 	"text/template"
@@ -272,7 +273,8 @@ func readPage(page string) (string, bool, error) {
 		return "", false, fmt.Errorf("reading file: %w", err)
 	}
 
-	return mdToHTML(raw), true, nil
+	rawNoFrontmatter := removeRegex.ReplaceAllString(string(raw), "")
+	return mdToHTML(rawNoFrontmatter), true, nil
 }
 
 func stageUpdate(page, html, email string) error {
@@ -285,11 +287,12 @@ func stageUpdate(page, html, email string) error {
 	}
 
 	path := filepath.Join("content", page) + ".md"
-	_, err = os.Stat(path) // don't let editors create new files
+	current, err := os.ReadFile(path)
 	if err != nil {
 		return fmt.Errorf("reading existing file: %w", err)
 	}
 
+	md = replaceFrontmatter(md, string(current))
 	err = os.WriteFile(path, []byte(md), 0644)
 	if err != nil {
 		return fmt.Errorf("writing file: %w", err)
@@ -303,14 +306,29 @@ func stageUpdate(page, html, email string) error {
 	return git("commit", "--allow-empty", "-m", fmt.Sprintf("Update %s\nAuthored by: %s\n", page, email))
 }
 
-func mdToHTML(md []byte) string {
+func mdToHTML(md string) string {
 	extensions := parser.CommonExtensions | parser.AutoHeadingIDs | parser.NoEmptyLineBeforeBlock
 	p := parser.NewWithExtensions(extensions)
-	doc := p.Parse(md)
+	doc := p.Parse([]byte(md))
 
 	htmlFlags := html.CommonFlags | html.HrefTargetBlank
 	opts := html.RendererOptions{Flags: htmlFlags}
 	renderer := html.NewRenderer(opts)
 
 	return string(markdown.Render(doc, renderer))
+}
+
+var removeRegex = regexp.MustCompile(`(?m)^\+\+\+\n.*?\n\+\+\+\n`)
+var replaceRegex = regexp.MustCompile(`(?m)^\+\+\+\n.*?\n\+\+\+\n`)
+
+func replaceFrontmatter(target, source string) string {
+	sourceFrontmatter := replaceRegex.FindString(source)
+
+	if sourceFrontmatter == "" {
+		return replaceRegex.ReplaceAllString(target, "")
+	}
+	if replaceRegex.MatchString(target) {
+		return replaceRegex.ReplaceAllString(target, sourceFrontmatter)
+	}
+	return sourceFrontmatter + "\n" + target
 }
