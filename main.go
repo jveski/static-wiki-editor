@@ -1,8 +1,10 @@
 package main
 
 import (
+	"crypto/md5"
 	"embed"
 	_ "embed"
+	"encoding/hex"
 	"flag"
 	"fmt"
 	"log/slog"
@@ -303,7 +305,8 @@ func stageUpdate(page, html, email string) error {
 		return fmt.Errorf("adding file: %w", err)
 	}
 
-	return git("commit", "--allow-empty", "-m", fmt.Sprintf("Update %s\nAuthored by: %s\n", page, email))
+	emailHash := md5.Sum([]byte(fmt.Sprintf("wiki-editor-%s", email)))
+	return git("commit", "--allow-empty", "-m", fmt.Sprintf("Update %s\nAuthored by: %s\n", page, hex.EncodeToString(emailHash[:])[:8]))
 }
 
 func mdToHTML(md string) string {
