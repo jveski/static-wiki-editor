@@ -321,12 +321,11 @@ func mdToHTML(md string) string {
 	return string(markdown.Render(doc, renderer))
 }
 
-var removeRegex = regexp.MustCompile(`(?m)^\+\+\+\n.*?\n\+\+\+\n`)
-var replaceRegex = regexp.MustCompile(`(?m)^\+\+\+\n.*?\n\+\+\+\n`)
+var removeRegex = regexp.MustCompile(`(?m)^\+\+\+\n([\s\S]*?)\n\+\+\+\n`)
+var replaceRegex = regexp.MustCompile(`(?m)^\+\+\+\n([\s\S]*?)\n\+\+\+\n`)
 
 func replaceFrontmatter(target, source string) string {
 	sourceFrontmatter := replaceRegex.FindString(source)
-
 	if sourceFrontmatter == "" {
 		return replaceRegex.ReplaceAllString(target, "")
 	}

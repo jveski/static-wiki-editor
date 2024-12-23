@@ -55,7 +55,7 @@ func TestGitInteractions(t *testing.T) {
 	require.NoError(t, git("clone", remote, "."))
 	raw, err := os.ReadFile(filepath.Join("content", "foo", "test.md"))
 	require.NoError(t, err)
-	assert.Equal(t, "+++\ntitle = foo\n+++\n\n# hello again\n\n**world**", string(raw))
+	assert.Equal(t, "+++\ntitle = foo\nmore = 123\n+++\n\n# hello again\n\n**world**", string(raw))
 }
 
 func createTestRepo(t *testing.T) string {
@@ -66,7 +66,7 @@ func createTestRepo(t *testing.T) string {
 	require.NoError(t, os.Chdir(t.TempDir()))
 	require.NoError(t, git("clone", dir, "."))
 	require.NoError(t, os.MkdirAll(filepath.Join("content", "foo"), 0755))
-	require.NoError(t, os.WriteFile(filepath.Join("content", "foo", "test.md"), []byte("+++\ntitle = foo\n+++\n# hello\n__world__\n"), 0755))
+	require.NoError(t, os.WriteFile(filepath.Join("content", "foo", "test.md"), []byte("+++\ntitle = foo\nmore = 123\n+++\n# hello\n__world__\n"), 0755))
 	require.NoError(t, git("add", "."))
 	require.NoError(t, git("commit", "-m", "initial commit"))
 	require.NoError(t, git("push", "origin", "main"))
