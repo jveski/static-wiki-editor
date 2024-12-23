@@ -19,6 +19,7 @@ jobs:
         name: Build and Push Image
         with:
           image: static-wiki-editor
+          tags: latest
           registry: ghcr.io
           dockerfile: Dockerfile
           username: ${{ github.actor }}
