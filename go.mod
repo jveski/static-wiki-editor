@@ -1,4 +1,4 @@
-module github.com/jveski/bobwiki
+module github.com/jveski/static-wiki-editor
 
 go 1.22.1
 
