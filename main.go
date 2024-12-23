@@ -91,6 +91,7 @@ func main() {
 
 	var (
 		addr           = flag.String("addr", "127.0.0.1:8080", "Address to listen on")
+		redirect       = flag.String("redirect", "https://github.com/jveski/static-wiki-editor", "URL to redirect the / route to")
 		syncInterval   = flag.Duration("sync-interval", time.Minute*5, "How often to sync git repo (not including actions caused by incoming requests)")
 		syncCooldown   = flag.Duration("sync-cooldown", time.Second*10, "Min interval between git pushes")
 		allowAnonymous = flag.Bool("allow-anonymous", false, "(insecure!) Allow anyone to edit. If false, X-Forwarded-Email is used to authenticate users")
@@ -129,8 +130,14 @@ func main() {
 		}
 	}()
 
-	router.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) { assets.ServeHTTP(w, r) })
 	router.HandleFunc("/ready", func(w http.ResponseWriter, r *http.Request) { w.WriteHeader(200) })
+	router.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path == "/" {
+			http.Redirect(w, r, *redirect, http.StatusTemporaryRedirect)
+			return
+		}
+		assets.ServeHTTP(w, r)
+	})
 
 	router.HandleFunc("/edit/", func(w http.ResponseWriter, r *http.Request) {
 		page := strings.TrimPrefix(r.URL.Path, "/edit/")
